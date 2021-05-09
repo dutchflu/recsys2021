@@ -14,6 +14,7 @@ from commons.log import log
 class LoadConfig(BaseModel):
     """Configuration to specify which data is loaded"""
     raw_data_path: str
+    split_size: float
 
 
 class DataConfig(BaseModel):

@@ -2,7 +2,8 @@
   "pipeline_type": "training_evaluation_pipeline",
   "data_provider_config": {
     "load_config": {
-      "raw_data_path": "../data/part-00000.csv"
+      "raw_data_path": "../data/part-00000.csv",
+      "split_size": 0.2
     },
     "data_config": {
       "label_cols": ["reply_timestamp", "retweet_timestamp", "retweet_with_comment_timestamp", "like_timestamp"],

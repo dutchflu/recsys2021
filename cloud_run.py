@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from training.config_factory import config_factory
 from training.pipelines.training_evaluation_pipeline import TrainingEvaluationPipelineConfig, TrainingEvaluationPipeline
 from training.data_preparation.data_preparation import DataProvider
+from training.pipelines.splitter import RandomSplitter
 from commons.data_provision import load_config
 from commons.log import log
 
@@ -24,8 +25,10 @@ def get_args():
 
 def run_training_evaluation_pipeline(pipeline_config: TrainingEvaluationPipelineConfig):
     data_provider = DataProvider(pipeline_config.data_provider_config)
+    splitter = RandomSplitter()
 
-    training_evaluation_pipeline = TrainingEvaluationPipeline(data_provider)
+    training_evaluation_pipeline = TrainingEvaluationPipeline(data_provider,
+                                                              splitter)
 
     training_evaluation_pipeline.run()
 
@@ -33,7 +36,8 @@ def run_training_evaluation_pipeline(pipeline_config: TrainingEvaluationPipeline
 def main():
     args = get_args()
 
-    # if it is a cloud config file, download to file to local first
+    # if it is a cloud config file, add the function to
+    # download the file to local first
     pipeline_config = load_config(args.config_file, config_factory)
     log.info("config loaded: %s", pipeline_config)
 

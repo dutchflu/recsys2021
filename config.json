@@ -2,10 +2,11 @@
   "pipeline_type": "training_evaluation_pipeline",
   "data_provider_config": {
     "load_config": {
-      "raw_data_path": ""
+      "raw_data_path": "../data/part-00000.csv"
     },
     "data_config": {
-      "custom_features": [],
+      "label_cols": ["reply_timestamp", "retweet_timestamp", "retweet_with_comment_timestamp", "like_timestamp"],
+      "custom_features": ["engaged_with_user_id", "enaging_user_id", "language", "tweet_type"],
       "categorical_features": "auto"
     }
   },

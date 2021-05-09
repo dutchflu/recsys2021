@@ -4,6 +4,8 @@ Main entry point for cloud run
 from argparse import ArgumentParser
 
 from training.config_factory import config_factory
+from training.pipelines.training_evaluation_pipeline import TrainingEvaluationPipelineConfig, TrainingEvaluationPipeline
+from training.data_preparation.data_preparation import DataProvider
 from commons.data_provision import load_config
 from commons.log import log
 
@@ -20,12 +22,23 @@ def get_args():
     return args_parser.parse_args()
 
 
+def run_training_evaluation_pipeline(pipeline_config: TrainingEvaluationPipelineConfig):
+    data_provider = DataProvider(pipeline_config.data_provider_config)
+
+    training_evaluation_pipeline = TrainingEvaluationPipeline(data_provider)
+
+    training_evaluation_pipeline.run()
+
+
 def main():
     args = get_args()
 
-    # if it is a cloud config file, download and read that file first
-    config = load_config(args.config_file, config_factory)
-    log.info("config loaded: %s", config)
+    # if it is a cloud config file, download to file to local first
+    pipeline_config = load_config(args.config_file, config_factory)
+    log.info("config loaded: %s", pipeline_config)
+
+    if pipeline_config.pipeline_type == "training_evaluation_pipeline":
+        run_training_evaluation_pipeline(pipeline_config)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 """
 data preparation
 """
-from commons.data_provision import DataProviderConfig, batch_read_dask
+from commons.data_provision import DataProviderConfig, batch_read_dask, DataConfig
 from commons.data_cleaning import ColumnSelector
 from commons.log import log
 
@@ -31,3 +31,8 @@ class DataProvider:
         data = self._process_data(data)
 
         return data
+
+    def get_data_config(self) -> DataConfig:
+        """return data config
+        """
+        return self.config.data_config

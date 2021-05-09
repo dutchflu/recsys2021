@@ -84,6 +84,7 @@ class TrainingPipeline:
     def run(self):
         self._generate_train_val_data()
         self._transform_data()
+        log.info(self.transformer_pipeline.get_updated_features())
         # self._train()
 
 
@@ -96,7 +97,7 @@ class TrainingEvaluationPipeline:
                  pipeline_config: TrainConfig):
         self.data_provider: DataProvider = data_provider
         self.splitter = splitter
-        self.transformer_pipeline = TransformerPipeline()
+        self.transformer_pipeline = TransformerPipeline(self.data_provider.get_data_config())
         self.pipeline_config = pipeline_config
 
     def run(self):

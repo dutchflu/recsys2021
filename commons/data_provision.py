@@ -21,8 +21,8 @@ class DataConfig(BaseModel):
 
     Used in models for feature specific hyperparameters."""
     label_cols: List[str]
-    custom_features: List[str]
-    categorical_features: str
+    categorical_features: List[str]
+    normal_features: List[str]
 
 
 class DataProviderConfig(BaseModel):

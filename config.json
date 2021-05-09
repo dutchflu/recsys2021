@@ -7,8 +7,8 @@
     },
     "data_config": {
       "label_cols": ["reply_timestamp", "retweet_timestamp", "retweet_with_comment_timestamp", "like_timestamp"],
-      "custom_features": ["engaged_with_user_id", "enaging_user_id", "language", "tweet_type"],
-      "categorical_features": "auto"
+      "categorical_features": ["engaged_with_user_id", "enaging_user_id", "language", "tweet_type"],
+      "normal_features": ["enaging_user_follower_count"]
     }
   },
   "model_config": {

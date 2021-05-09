@@ -3,7 +3,6 @@ data provisions
 """
 from typing import Dict, Any, List
 import json
-import pandas as pd
 import dask.dataframe as dd
 from pydantic import BaseModel
 
@@ -37,10 +36,15 @@ def batch_read_dask(raw_data_path):
     e.g. "data/part-*.csv"
     """
     log.info("Dask reading")
-    df: pd.DataFrame = dd.read_csv(raw_data_path,
-                                   assume_missing=True)
+    df = dd.read_csv(raw_data_path,
+                     assume_missing=True,
+                     dtype={"reply_timestamp": str,
+                            "retweet_timestamp": str,
+                            "retweet_with_comment_timestamp": str,
+                            "like_timestamp": str})
     log.info("Converting to pandas dataframe")
     df_pd = df.compute().reset_index(drop=True)
+    log.info("dtypes: %s", df_pd.dtypes)
     return df_pd
 
 

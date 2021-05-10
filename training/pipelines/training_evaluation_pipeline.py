@@ -11,6 +11,8 @@ from training.models.model import ModelConfig
 from training.data_preparation.data_preparation import DataProvider
 from training.pipelines.splitter import Splitter, Split
 from training.pipelines.transformer_pipeline import TransformerPipeline
+from training.models.model import Model, ModelConfig
+from training.models.lightgbm import LightGbmModel
 
 class PipelineConfig(BaseModel):
     """Extra setup for a pipeline, like TrainConfig or EvaluateConfig"""
@@ -37,10 +39,10 @@ class TrainingPipeline:
     def __init__(self,
                  train_data: pd.DataFrame,
                  transformer_pipeline: TransformerPipeline,
-                 # model: Model,
+                 model: Model,
                  pipeline_config: TrainConfig):
         self.transformer_pipeline = transformer_pipeline
-        # self.model = model
+        self.model = model
         self.pipeline_config = pipeline_config
         self.train_data = train_data
         self.validation_data = None
@@ -56,24 +58,25 @@ class TrainingPipeline:
 
     def _transform_data(self):
         log.info("cols before data transform: %s", self.train_data.columns)
-        self.transformer_pipeline.fit(self.train_data)
         log.info("transforming training data")
-        self.train_data = self.transformer_pipeline.transform(self.train_data)
+        self.train_data = self.transformer_pipeline.fit_transform(self.train_data)
+        # self.train_data = self.transformer_pipeline.transform(self.train_data)
         log.info("cols after data transform: %s", self.train_data.columns)
         log.info("transforming validation data")
         self.validation_data = self.transformer_pipeline.transform(self.validation_data)
         return {"train_data": self.train_data, "val_data": self.validation_data, "transformer_pipeline": self.transformer_pipeline}
 
-    # def _train(self):
-    #     self.model.train(self.train_data, self.validation_data,
-    #                      self.transformer_pipeline.get_output_data_config(self.data_provider.get_data_config()))
-    #     return self.model
+    def _train(self):
+        self.model.train(self.train_data, self.validation_data,
+                         self.transformer_pipeline.get_updated_features(),
+                         self.transformer_pipeline.get_labels())
+        return self.model
 
     def get_transformer_pipeline(self):
         return self.transformer_pipeline
 
-    # def get_model(self):
-    #     return self.model
+    def get_model(self):
+        return self.model
 
     def get_pipeline_config(self) -> TrainConfig:
         return self.pipeline_config
@@ -85,7 +88,7 @@ class TrainingPipeline:
         self._generate_train_val_data()
         self._transform_data()
         log.info(self.transformer_pipeline.get_updated_features())
-        # self._train()
+        self._train()
 
 
 class TrainingEvaluationPipeline:
@@ -94,10 +97,11 @@ class TrainingEvaluationPipeline:
     """
     def __init__(self, data_provider: DataProvider,
                  splitter: Splitter,
+                 model_config: ModelConfig,
                  pipeline_config: TrainConfig):
         self.data_provider: DataProvider = data_provider
         self.splitter = splitter
-        self.transformer_pipeline = TransformerPipeline(self.data_provider.get_data_config())
+        self.model_config = model_config
         self.pipeline_config = pipeline_config
 
     def run(self):
@@ -114,10 +118,26 @@ class TrainingEvaluationPipeline:
         log.info("train_set shape: %s", train_set.shape)
         log.info("test_set shape: %s", test_set.shape)
         training_pipeline = self._run_training_pipeline(train_set)
+        # df_predictions, prediction_pipeline = self._run_prediction_pipeline(test_set, training_pipeline)
 
         return {}
 
+    def _training_pipeline_factory(self, train_set):
+        transformer_pipeline = TransformerPipeline(self.data_provider.get_data_config())
+        model = LightGbmModel(self.model_config)
+        return TrainingPipeline(train_set, transformer_pipeline, model, self.pipeline_config)
+
+    # def _prediction_pipeline_factory(training_pipeline):
+    #     pass
+
     def _run_training_pipeline(self, train_set):
-        training_pipeline = TrainingPipeline(train_set, self.transformer_pipeline, self.pipeline_config)
+        training_pipeline = self._training_pipeline_factory(train_set)
         training_pipeline.run()
         return training_pipeline
+
+    # def _run_prediction_pipeline(self, test_set: pd.DataFrame, training_pipeline: TrainingPipeline):
+    #     prediction_pipeline = self._prediction_pipeline_factory(training_pipeline)
+    #     ypred = prediction_pipeline.run()
+    #     df_predictions = pd.DataFrame({"ypred": ypred,
+    #                                    "ytrue": transformed_test_data["label"]})
+    #     return df_predictions, prediction_pipeline

@@ -11,15 +11,15 @@ def convert_str_to_bool(string_x):
     return label
 
 
-class StringToBool(Transformer):
+class LabelTransform(Transformer):
     """
     string to bool
     """
     def fit(self, data: pd.DataFrame):
-        log.info("StringToBool fit: pass")
+        log.info("LabelTransform fit: pass")
 
     def transform(self, data: pd.DataFrame) -> pd.DataFrame:
-        log.info("StringToBool transform: %s", self.cols)
+        log.info("LabelTransform transform: %s", self.cols)
         for col in self.cols:
             data[col] = data[col].map(convert_str_to_bool)
         return data

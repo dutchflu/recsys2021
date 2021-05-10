@@ -29,6 +29,7 @@ def run_training_evaluation_pipeline(pipeline_config: TrainingEvaluationPipeline
 
     training_evaluation_pipeline = TrainingEvaluationPipeline(data_provider,
                                                               splitter,
+                                                              pipeline_config.model_config,
                                                               pipeline_config.train_config)
 
     training_evaluation_pipeline.run()

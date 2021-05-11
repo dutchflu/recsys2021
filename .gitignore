@@ -12,6 +12,7 @@ env/
 htmlcov/
 
 # exclude
+!data/part-00000-sample.csv
 
 ### IntelliJ IDEA ###
 .idea

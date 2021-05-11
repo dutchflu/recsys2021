@@ -2,7 +2,7 @@
   "pipeline_type": "training_evaluation_pipeline",
   "data_provider_config": {
     "load_config": {
-      "raw_data_path": "../data/part-00000.csv",
+      "raw_data_path": "data/part-00000-sample.csv",
       "split_size": 0.2
     },
     "data_config": {

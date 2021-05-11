@@ -14,6 +14,7 @@ from training.pipelines.splitter import Splitter, Split
 from training.pipelines.transformer_pipeline import TransformerPipeline
 from training.models.model import Model
 from training.models.lightgbm import LightGbmModel
+from training.evaluation.evaluator import RceEvaluator, AvgPrecisionEvaluator
 
 class PipelineConfig(BaseModel):
     """Extra setup for a pipeline, like TrainConfig or EvaluateConfig"""
@@ -129,15 +130,17 @@ class TrainingEvaluationPipeline:
         self.splitter = splitter
         self.model_config = model_config
         self.pipeline_config = pipeline_config
+        self.evaluators = {"rce": RceEvaluator(), "ap": AvgPrecisionEvaluator()}
 
     def run(self):
-        all_splits = []
+        results_all_splits = []
         data = self.data_provider.get_data()
         split_num = 0
         for split in self.splitter.split(data, self.data_provider.config.load_config):
             results = self._run_split(data, split, split_num)
-            all_splits.append(results)
+            results_all_splits.append(results)
             split_num += 1
+        log.info("results for all split: %s", results_all_splits)
 
     def _run_split(self, data: pd.DataFrame, split: Split, split_num: int):
         train_set, test_set = split.data(data)
@@ -147,7 +150,9 @@ class TrainingEvaluationPipeline:
         transformer_pipeline = training_pipeline.get_transformer_pipeline()
         model = training_pipeline.get_model()
         ypred, ytrue = self._run_prediction_pipeline(test_set, transformer_pipeline, model)
-        return {}
+        scores_for_split = self._score(ypred, ytrue)
+        log.info("results for split %s: %s", split_num, scores_for_split)
+        return scores_for_split
 
     def _training_pipeline_factory(self, train_set):
         transformer_pipeline = TransformerPipeline(self.data_provider.get_data_config())
@@ -166,3 +171,10 @@ class TrainingEvaluationPipeline:
         prediction_pipeline = self._prediction_pipeline_factory(test_set, transformer_pipeline, model)
         ypred, ytrue = prediction_pipeline.run()
         return ypred, ytrue
+
+    def _score(self, ypred, ytrue):
+        scores = {}
+        for name, evaluator in self.evaluators.items():
+            score = evaluator.score(ypred, ytrue)
+            scores[name] = score
+        return scores

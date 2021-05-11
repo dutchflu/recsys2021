@@ -43,6 +43,8 @@ Note:
 ```
 python cloud_run.py
 ```
+Note:
+1. In the `training.pipelines.transformer_pipeline`, for simplicity, I `hard-coded` the feature transformation steps. We can always change that and add the desired feature transformations. I dunno want to make this pipeline too complex (thus it can be flexibly configured in config.json), so I think current hard-code somehow makes sense.
 
 ## run `sh verify.sh` before pushing
 pylint + pytest (missing)

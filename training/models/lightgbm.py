@@ -17,9 +17,9 @@ class LightGbmModel(Model):
 
     def train(self, train_data: pd.DataFrame, val_data: pd.DataFrame, features: list, labels: list):
         log.info("training")
-        eval_set = [(val_data[features], val_data[labels[0]])]
+        eval_set = [(val_data[features], val_data[labels])]
         self._model.fit(X=train_data[features],
-                        y=train_data[labels[0]],
+                        y=train_data[labels],
                         eval_set=eval_set,
                         eval_names=['val'],
                         feature_name=features,

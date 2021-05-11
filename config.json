@@ -6,7 +6,7 @@
       "split_size": 0.2
     },
     "data_config": {
-      "label_cols": ["reply_timestamp", "retweet_timestamp", "retweet_with_comment_timestamp", "like_timestamp"],
+      "label_cols": ["like_timestamp"],
       "categorical_features": ["engaged_with_user_id", "enaging_user_id", "language", "tweet_type"],
       "normal_features": ["enaging_user_follower_count"]
     }

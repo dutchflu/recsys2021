@@ -3,6 +3,7 @@ training evaluation pipeline
 """
 from pydantic import BaseModel, Extra
 import pandas as pd
+import numpy as np
 
 from commons.data_provision import DataProviderConfig
 from commons.log import log
@@ -11,7 +12,7 @@ from training.models.model import ModelConfig
 from training.data_preparation.data_preparation import DataProvider
 from training.pipelines.splitter import Splitter, Split
 from training.pipelines.transformer_pipeline import TransformerPipeline
-from training.models.model import Model, ModelConfig
+from training.models.model import Model
 from training.models.lightgbm import LightGbmModel
 
 class PipelineConfig(BaseModel):
@@ -91,6 +92,31 @@ class TrainingPipeline:
         self._train()
 
 
+class PredictionPipeline:
+    """Prediction Pipeline"""
+    def __init__(self,
+                 test_data: pd.DataFrame,
+                 transformer_pipeline: TransformerPipeline,
+                 model: Model):
+        self.transformer_pipeline = transformer_pipeline
+        self.model = model
+        self.test_data = test_data
+
+    def transform_data(self):
+        self.test_data = self.transformer_pipeline.transform(self.test_data)
+        return self.test_data
+
+    def predict(self) -> np.ndarray:
+        ypred = self.model.predict(self.test_data, self.transformer_pipeline.get_updated_features())
+        return ypred
+
+    def run(self) -> np.ndarray:
+        self.transform_data()
+        ypred = self.predict()
+        label_cols = self.transformer_pipeline.get_labels()
+        return ypred, self.test_data[label_cols]
+
+
 class TrainingEvaluationPipeline:
     """
     Train and evaluate
@@ -118,8 +144,9 @@ class TrainingEvaluationPipeline:
         log.info("train_set shape: %s", train_set.shape)
         log.info("test_set shape: %s", test_set.shape)
         training_pipeline = self._run_training_pipeline(train_set)
-        # df_predictions, prediction_pipeline = self._run_prediction_pipeline(test_set, training_pipeline)
-
+        transformer_pipeline = training_pipeline.get_transformer_pipeline()
+        model = training_pipeline.get_model()
+        ypred, ytrue = self._run_prediction_pipeline(test_set, transformer_pipeline, model)
         return {}
 
     def _training_pipeline_factory(self, train_set):
@@ -127,17 +154,15 @@ class TrainingEvaluationPipeline:
         model = LightGbmModel(self.model_config)
         return TrainingPipeline(train_set, transformer_pipeline, model, self.pipeline_config)
 
-    # def _prediction_pipeline_factory(training_pipeline):
-    #     pass
+    def _prediction_pipeline_factory(self, test_set, transformer_pipeline, model):
+        return PredictionPipeline(test_set, transformer_pipeline, model)
 
     def _run_training_pipeline(self, train_set):
         training_pipeline = self._training_pipeline_factory(train_set)
         training_pipeline.run()
         return training_pipeline
 
-    # def _run_prediction_pipeline(self, test_set: pd.DataFrame, training_pipeline: TrainingPipeline):
-    #     prediction_pipeline = self._prediction_pipeline_factory(training_pipeline)
-    #     ypred = prediction_pipeline.run()
-    #     df_predictions = pd.DataFrame({"ypred": ypred,
-    #                                    "ytrue": transformed_test_data["label"]})
-    #     return df_predictions, prediction_pipeline
+    def _run_prediction_pipeline(self, test_set: pd.DataFrame, transformer_pipeline, model):
+        prediction_pipeline = self._prediction_pipeline_factory(test_set, transformer_pipeline, model)
+        ypred, ytrue = prediction_pipeline.run()
+        return ypred, ytrue

@@ -45,6 +45,8 @@ python cloud_run.py
 ```
 Note:
 1. In the `training.pipelines.transformer_pipeline`, for simplicity, I `hard-coded` the feature transformation steps. We can always change that and add the desired feature transformations. I dunno want to make this pipeline too complex (thus it can be flexibly configured in config.json), so I think current hard-code somehow makes sense.
+2. For target encoding, I am currently using sklearn `category_encoders` since it is simple to use, while it is also easy to cause the overfitting problem. We can try h2o’s `H2OTargetEncoderEstimator`, which is more powerful, while it might be harder to run, which requires java and some starting up steps.
+
 
 ## run `sh verify.sh` before pushing
 pylint + pytest (missing)
